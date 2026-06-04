@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAD Study Tool – Mobile Applications Development</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1929;
+    --card: #22203a;
+    --border: #2e2b4a;
+    --accent: #7c6af7;
+    --accent2: #f7c948;
+    --accent3: #4ef7c9;
+    --text: #e8e6ff;
+    --muted: #8e8bad;
+    --correct: #27c96e;
+    --wrong: #f7476b;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .screen{display:none;min-height:100vh;padding:24px 16px 48px;max-width:820px;margin:0 auto}
+  .screen.active{display:block}
+  h1{font-family:'Syne',sans-serif;font-weight:800}
+  h2{font-family:'Syne',sans-serif;font-weight:700}
+  h3{font-family:'Syne',sans-serif;font-weight:600}
+
+  /* NAV BAR */
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .btn-nav{background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s}
+  .btn-nav:hover{border-color:var(--accent);color:var(--accent)}
+  .topbar-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--muted);flex:1;text-align:center}
+
+  /* DASHBOARD (FIXED SPECIFICITY BUG) */
+  #screen-dashboard{min-height:100vh;padding:40px 16px;text-align:center}
+  #screen-dashboard.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+  
+  .dash-logo{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 0 24px #7c6af799)}
+  .dash-title{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,48px);font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+  .dash-sub{font-size:15px;color:var(--muted);margin-bottom:48px;line-height:1.6}
+  .dash-btns{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:520px}
+  .dash-btn{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 20px;cursor:pointer;transition:all .25s;text-align:center;color:var(--text)}
+  .dash-btn:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 32px rgba(124,106,247,0.25)}
+  .dash-btn-icon{font-size:36px;margin-bottom:12px}
+  .dash-btn-label{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+  .dash-btn-desc{font-size:12px;color:var(--muted);margin-top:4px}
+  @media(max-width:480px){.dash-btns{grid-template-columns:1fr}}
+
+  /* MENU SCREEN */
+  .menu-title{font-size:clamp(22px,5vw,34px);margin-bottom:6px}
+  .menu-sub{color:var(--muted);font-size:14px;margin-bottom:32px}
+  .menu-grid{display:flex;flex-direction:column;gap:12px}
+  .menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all .2s;color:var(--text)}
+  .menu-item:hover{border-color:var(--accent);background:rgba(124,106,247,0.08);transform:translateX(4px)}
+  .menu-item-icon{font-size:24px;flex-shrink:0}
+  .menu-item-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:600}
+  .menu-item-desc{font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* REVIEWER */
+  .reviewer-content{display:flex;flex-direction:column;gap:20px}
+  .rev-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .rev-section-header{background:linear-gradient(90deg,var(--accent)22,transparent);border-bottom:1px solid var(--border);padding:16px 20px}
+  .rev-section-header h3{font-size:15px;color:var(--accent)}
+  .rev-section-body{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+  .rev-term{background:var(--surface);border-radius:10px;padding:14px 16px;border-left:3px solid var(--accent)}
+  .rev-term-name{font-weight:600;font-size:14px;color:var(--accent2);margin-bottom:4px}
+  .rev-term-def{font-size:13px;color:var(--text);line-height:1.6}
+  .rev-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .rev-list li{font-size:13px;color:var(--text);padding:10px 14px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent3);line-height:1.5}
+  .rev-table{width:100%;border-collapse:collapse;font-size:13px}
+  .rev-table th{background:rgba(124,106,247,0.15);color:var(--accent);padding:10px 12px;text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .rev-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top;line-height:1.5}
+  .rev-table tr:last-child td{border-bottom:none}
+  .rev-note{background:rgba(247,201,72,0.08);border:1px solid rgba(247,201,72,0.25);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text);line-height:1.6}
+  .rev-note::before{content:"💡 ";font-size:14px}
+
+  /* QUIZ SCREEN */
+  .quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+  .quiz-title-block h2{font-size:18px}
+  .quiz-title-block p{font-size:12px;color:var(--muted);margin-top:2px}
+  .scoreboard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent3);white-space:nowrap}
+
+  /* SINGLE QUESTION VIEW */
+  .quiz-progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden}
+  .quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:2px;transition:width .3s}
+  .question-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;margin-bottom:20px}
+  .question-meta{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:600}
+  .question-text{font-size:16px;line-height:1.65;font-weight:500}
+  .choices-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+  .choice-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);transition:all .2s;display:flex;align-items:flex-start;gap:12px;line-height:1.5}
+  .choice-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,106,247,0.1)}
+  .choice-btn:disabled{cursor:default}
+  .choice-letter{background:var(--border);color:var(--muted);border-radius:6px;min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+  .choice-btn.correct{border-color:var(--correct);background:rgba(39,201,110,0.12)}
+  .choice-btn.correct .choice-letter{background:var(--correct);color:#000}
+  .choice-btn.wrong{border-color:var(--wrong);background:rgba(247,71,107,0.12)}
+  .choice-btn.wrong .choice-letter{background:var(--wrong);color:#fff}
+  .feedback-msg{font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;margin-bottom:16px}
+  .feedback-msg.correct{background:rgba(39,201,110,0.12);color:var(--correct);border:1px solid rgba(39,201,110,0.3)}
+  .feedback-msg.wrong{background:rgba(247,71,107,0.1);color:var(--wrong);border:1px solid rgba(247,71,107,0.25)}
+  .quiz-nav-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .btn-primary{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px 28px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+  .btn-primary:hover{background:#9380f9;transform:translateY(-1px)}
+  .btn-secondary{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px 24px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;transition:all .2s}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* COMPLETION BANNER */
+  .completion-banner{background:linear-gradient(135deg,rgba(124,106,247,0.15),rgba(78,247,201,0.1));border:1px solid var(--accent);border-radius:var(--radius);padding:36px 28px;text-align:center;margin-bottom:32px}
+  .completion-banner h2{font-size:clamp(20px,5vw,32px);background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+  .score-big{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,60px);font-weight:800;color:var(--accent2);line-height:1}
+  .score-pct{font-size:18px;color:var(--muted);margin-top:8px}
+
+  /* ANSWER KEY */
+  .answer-key-section{margin-top:32px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .answer-key-header{background:rgba(124,106,247,0.1);padding:14px 20px;border-bottom:1px solid var(--border)}
+  .answer-key-header h3{font-size:14px;color:var(--accent)}
+  .answer-key-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0}
+  .ak-item{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+  .ak-num{color:var(--muted);font-size:12px}
+  .ak-ans{color:var(--text);font-weight:500;margin-top:2px}
+
+  /* SCROLLABLE AREA */
+  .review-scroll{overflow-y:auto}
+</style>
+</head>
+<body>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen active">
+  <div class="dash-logo">📱</div>
+  <h1 class="dash-title">Mobile Applications<br>Development</h1>
+  <p class="dash-sub">IT1918 · Comprehensive Study Tool<br>Choose a module to get started</p>
+  <div class="dash-btns">
+    <div class="dash-btn" data-go="reviewer-menu">
+      <div class="dash-btn-icon">📖</div>
+      <div class="dash-btn-label">Reviewer</div>
+      <div class="dash-btn-desc">Read all lesson materials</div>
+    </div>
+    <div class="dash-btn" data-go="test-menu">
+      <div class="dash-btn-icon">📋</div>
+      <div class="dash-btn-label">Test Suite</div>
+      <div class="dash-btn-desc">Practice & timed exams</div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWER MENU -->
+<div id="screen-reviewer-menu" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" data-go="dashboard">🏠 Home</button>
+    <span class="topbar-title">Reviewer</span>
+  </div>
+  <h2 class="menu-title">📖 Reviewer</h2>
+  <p class="menu-sub">Select a period to study</p>
+  <div class="menu-grid">
+    <div class="menu-item" data-go="reviewer-prelim">
+      <span class="menu-item-icon">📄</span>
+      <div>
+        <div class="menu-item-label">Prelim Reviewer</div>
+        <div class="menu-item-desc">Mobile App Overview &amp; Android Basics</div>
+      </div>
+    </div>
+    <div class="menu-item" data-go="reviewer-midterm">
+      <span class="menu-item-icon">📄</span>
+      <div>
+        <div class="menu-item-label">Midterm Reviewer</div>
+        <div class="menu-item-desc">Activities, Intents &amp; User Interface</div>
+      </div>
+    </div>
+    <div class="menu-item" data-go="reviewer-prefinal">
+      <span class="menu-item-icon">📄</span>
+      <div>
+        <div class="menu-item-label">Prefinal Reviewer</div>
+        <div class="menu-item-desc">User Interaction &amp; App Design</div>
+      </div>
+    </div>
+    <div class="menu-item" data-go="reviewer-finals">
+      <span class="menu-item-icon">📄</span>
+      <div>
+        <div class="menu-item-label">Finals Reviewer</div>
+        <div class="menu-item-desc">Data Storage</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWER: PRELIM -->
+<div id="screen-reviewer-prelim" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" data-go="reviewer-menu">← Back</button>
+    <span class="topbar-title">Prelim Reviewer</span>
+    <button class="btn-nav" data-go="dashboard">🏠</button>
+  </div>
+  <div class="reviewer-content">
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Benefits of Using Mobile Apps</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Convenience</div><div class="rev-term-def">A mobile app user can access and share information anytime or anywhere. Internet connection is not required on most apps.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Personalization</div><div class="rev-term-def">A user can change the settings of the mobile app based on his preferences. He can also receive notifications real time.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Productivity</div><div class="rev-term-def">Users can write, read, and present their reports using only their mobile phones. They can also manage their multimedia files and share to friends through social sites.</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Development Environments (IDEs)</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">IDE (Integrated Development Environment)</div><div class="rev-term-def">A programming environment that has been packaged as an application program. Typically consists of a code editor, compiler, debugger, and a GUI builder.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Android Studio</div><div class="rev-term-def">The official IDE for Android application development, based on IntelliJ IDEA (a Java IDE).</div></div>
+        <div class="rev-term"><div class="rev-term-name">Xcode</div><div class="rev-term-def">Allows users to build apps and run them directly on their Apple devices. Uses Swift, created by Apple for iOS, OS X, and watchOS development.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Xamarin</div><div class="rev-term-def">Extends the .NET developer platform with tools and libraries specifically for building cross-platform apps.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Corona</div><div class="rev-term-def">A free, cross-platform framework ideal for creating mobile apps and games. Uses Lua, an easy-to-learn scripting language.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Apache Cordova</div><div class="rev-term-def">An open-source mobile development framework that allows use of standard web technologies — HTML5, CSS3, and JavaScript for cross-platform development.</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Challenges in Developing Mobile Apps</h3></div>
+      <div class="rev-section-body">
+        <ul class="rev-list">
+          <li><strong>Understanding the market and the user</strong> – The current market scenario must be studied and the needs of the target users must be addressed.</li>
+          <li><strong>Supporting multiple screen types</strong> – Devices come in different sizes and shapes, which affects how you design the screens and UI elements in your apps.</li>
+          <li><strong>Maximizing app performance</strong> – The performance of an app is affected by factors such as battery life, multimedia content, and internet access.</li>
+          <li><strong>Securing users</strong> – The users' data is the most valuable asset. Users' sensitive information must be protected at all times.</li>
+          <li><strong>Remaining compatible with older versions</strong> – Not all users may have upgraded or may be able to upgrade their devices.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>App Development Workflow</h3></div>
+      <div class="rev-section-body">
+        <ul class="rev-list">
+          <li><strong>1. Setup</strong> – Install and setup your chosen IDE. Create an emulator and connect hardware devices.</li>
+          <li><strong>2. Development</strong> – Write code, design a UI, and create resources for different device types.</li>
+          <li><strong>3. Building and Running</strong> – Build your project into a package that you can install and run on the emulator or an Android-powered device.</li>
+          <li><strong>4. Debugging, Profiling, and Testing</strong> – Continue writing your app but with a focus on eliminating bugs and optimizing app performance.</li>
+          <li><strong>5. Publishing</strong> – The app is configured and built for release and distributed to users.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>App Components (App Fundamentals)</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Activity</div><div class="rev-term-def">The entry point for interacting with the user. Represents a single screen with a user interface. Example: an activity that shows a list of new emails.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Service</div><div class="rev-term-def">Runs in the background to perform long-running operations or to perform work for remote processes. Example: playing music in the background while using a different app.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Broadcast Receiver</div><div class="rev-term-def">A component that enables the system to deliver events to the app outside of a regular user flow, allowing the app to respond to system-wide broadcast announcements. Example: a broadcast indicating that the battery is low.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Content Provider</div><div class="rev-term-def">Manages a shared set of app data that you can store which your app can access. Example: a content provider that manages the user's contact information.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Intent</div><div class="rev-term-def">A message defined by an Intent object that describes an action to perform, including the data to be acted upon, the category of component that should perform the action, and other instructions. App activities, services, and broadcast receivers are activated by intents.</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Programming Languages for Android</h3></div>
+      <div class="rev-section-body">
+        <ul class="rev-list">
+          <li><strong>C++</strong> – Close to C# and Java, makes it easy for programmers to switch.</li>
+          <li><strong>Swift</strong> – The official programming language for iOS.</li>
+          <li><strong>Kotlin</strong> – Combines object-oriented and functional programming features. Uses val (never changes) and var (can change) keywords.</li>
+          <li><strong>Java</strong> – Commonly used for Android development.</li>
+          <li><strong>C#</strong> – Used especially with Xamarin.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>The Manifest File (AndroidManifest.xml)</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Manifest File</div><div class="rev-term-def">Details the components that exist in an app. The root element is &lt;manifest&gt;, and it must contain &lt;application&gt; as the last child element.</div></div>
+        <div class="rev-note">The manifest must declare: the app's package name, app components (&lt;activity&gt;, &lt;service&gt;, &lt;receiver&gt;, &lt;provider&gt;), required permissions, and hardware/software features.</div>
+        <div class="rev-term"><div class="rev-term-name">&lt;intent-filter&gt;</div><div class="rev-term-def">Specifies the types of intents that an activity, service, or broadcast receiver can respond to.</div></div>
+        <div class="rev-term"><div class="rev-term-name">&lt;action&gt; and &lt;category&gt;</div><div class="rev-term-def">&lt;action&gt; adds an action to an intent filter; &lt;category&gt; adds a category name to an intent filter.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REVIEWER: MIDTERM -->
+<div id="screen-reviewer-midterm" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" data-go="reviewer-menu">← Back</button>
+    <span class="topbar-title">Midterm Reviewer</span>
+    <button class="btn-nav" data-go="dashboard">🏠</button>
+  </div>
+  <div class="reviewer-content">
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Activity Lifecycle – Callback Methods</h3></div>
+      <div class="rev-section-body">
+        <table class="rev-table">
+          <tr><th>Method</th><th>Description</th></tr>
+          <tr><td>onCreate()</td><td>Invoked when the app is launched for the first time. Happens only once for the entire life of the activity.</td></tr>
+          <tr><td>onStart()</td><td>Invoked before the activity becomes visible to the user. Followed by onResume() or onStop().</td></tr>
+          <tr><td>onResume()</td><td>Invoked before the activity starts interacting with the user.</td></tr>
+          <tr><td>onPause()</td><td>Invoked when the system is about to start resuming another activity. Followed by onResume() or onStop().</td></tr>
+          <tr><td>onStop()</td><td>Invoked when the activity is no longer visible to the user. Followed by onRestart() or onDestroy().</td></tr>
+          <tr><td>onRestart()</td><td>Invoked if the activity comes back after being stopped. Always followed by onStart().</td></tr>
+          <tr><td>onDestroy()</td><td>Invoked when the activity is finishing or the system is temporarily destroying it (e.g., device rotation).</td></tr>
+        </table>
+        <div class="rev-note">The parentActivityName attribute indicates that the main activity is the parent of a second activity, enabling a back-navigation arrow.</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Activity Implementation</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Main Activity (MainActivity.java)</div><div class="rev-term-def">Presented to the user when the app is launched. It can then start other activities to perform different actions.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Activity Life Cycle</div><div class="rev-term-def">The set of states an activity can be in during its entire lifetime.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Back Stack</div><div class="rev-term-def">Each time a new activity starts, the previous activity is stopped, but the system preserves the activity in a stack called the back stack.</div></div>
+        <div class="rev-note">To implement an activity: (1) Create an Activity Java class, (2) Implement a basic UI in an associated XML layout file, (3) Declare the new Activity in AndroidManifest.xml. In Android Studio, use File &gt; New &gt; Activity.</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Intents</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Intent</div><div class="rev-term-def">An asynchronous message used in an activity to request an action from another activity, or from some other app component. Can be used to start one activity from another and to pass data between activities.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Target Activity</div><div class="rev-term-def">The activity that will receive the intent.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Intent Data / Object</div><div class="rev-term-def">Contains a reference to the data you want the receiving activity to operate on.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Intent Extras</div><div class="rev-term-def">Carry information the receiving activity requires to accomplish the requested action (optional).</div></div>
+        <div class="rev-term"><div class="rev-term-name">Intent Flags</div><div class="rev-term-def">May instruct the Android system how to launch an Activity or how to treat it after it's launched (optional).</div></div>
+        <div class="rev-term"><div class="rev-term-name">Explicit Intent</div><div class="rev-term-def">The target of the intent (the class name of the activity) is already identified.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Implicit Intent</div><div class="rev-term-def">The target of the intent is not yet identified but there is a general action to perform. Also includes an action, category, and data type.</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>User Interface – Layouts</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Layout</div><div class="rev-term-def">Defines the structure for an app's user interface. All elements are built using View (widget) and ViewGroup (layout).</div></div>
+        <div class="rev-term"><div class="rev-term-name">View (Widget)</div><div class="rev-term-def">Draws something the user can see and interact with.</div></div>
+        <div class="rev-term"><div class="rev-term-name">ViewGroup (Layout)</div><div class="rev-term-def">An invisible container that defines the layout structure for View and other ViewGroup objects.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Constraint Layout</div><div class="rev-term-def">Creates large and complex layouts with a flat view hierarchy (no nested view groups).</div></div>
+        <div class="rev-term"><div class="rev-term-name">Linear Layout</div><div class="rev-term-def">Organizes its child view elements into a single horizontal or vertical row.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Relative Layout</div><div class="rev-term-def">Used to specify the location of child objects relative to each other or to the parent.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Web View</div><div class="rev-term-def">Used for displaying web pages.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Frame Layout</div><div class="rev-term-def">Designed to block out an area on the screen to display a single item.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Table Layout</div><div class="rev-term-def">Arranges its child objects into rows and columns.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Grid Layout</div><div class="rev-term-def">Arranges its child objects in a rectangular grid that can be scrolled.</div></div>
+        <div class="rev-term"><div class="rev-term-name">wrap_content</div><div class="rev-term-def">Sets the size of the view to the dimensions required by its content.</div></div>
+        <div class="rev-term"><div class="rev-term-name">match_parent</div><div class="rev-term-def">Sets the view to be as big as its parent view group will allow.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Context</div><div class="rev-term-def">An interface to global information about an application environment.</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>User Interface Components</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Notification</div><div class="rev-term-def">A message that Android displays outside the app's UI to provide the user with reminders, communication from other people, or other timely information.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Notification Drawer</div><div class="rev-term-def">Allows to view more details and take actions with the notification.</div></div>
+        <div class="rev-term"><div class="rev-term-name">App Bar / Action Bar</div><div class="rev-term-def">Provides a visual structure and interactive elements familiar to users. Comes with tabs or drop-down lists. Also known as the action bar.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Snackbar</div><div class="rev-term-def">Provides a quick pop-up message to the user.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Dialog</div><div class="rev-term-def">A small window that prompts the user to make a decision or enter additional information. It is not designed to fill the screen.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Menu</div><div class="rev-term-def">Used to present user actions and other options in the app's activities.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Toast</div><div class="rev-term-def">Provides simple feedback about an operation in a small popup. Automatically disappears after a few seconds.</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>XML &amp; Java UI Key Facts</h3></div>
+      <div class="rev-section-body">
+        <ul class="rev-list">
+          <li>Two ways to create a layout: <strong>Declare UI elements in XML</strong> or <strong>Instantiate layout elements at runtime</strong>.</li>
+          <li>All view groups include a <strong>width</strong> (layout_width) and <strong>height</strong> (layout_height) — required for every view.</li>
+          <li>Required attributes of all user interface elements: <strong>ID and Text</strong>.</li>
+          <li><code>setContentView(R.___.activity_main)</code> — the blank is filled with <strong>layout</strong>.</li>
+          <li><code>android:id="+@id/button1"</code> — the error is the <strong>+@id</strong> (correct: <strong>@+id</strong>).</li>
+          <li><code>android:text="Midterm Exam";</code> — the error is the <strong>semicolon (;)</strong>.</li>
+          <li><code>protected ___ onCreate(Bundle savedValues){}</code> — the blank is <strong>void</strong>.</li>
+          <li><code>public class ProbActivity ___ Activity{}</code> — the blank is <strong>extends</strong>.</li>
+          <li><strong>findViewByld()</strong> requires <strong>1</strong> argument.</li>
+          <li><strong>getText()</strong> requires <strong>1</strong> argument.</li>
+          <li><strong>setText()</strong> requires <strong>1</strong> argument.</li>
+          <li><code>String newText = et.setText().toString();</code> — error is <strong>setText()</strong> (should be getText()).</li>
+          <li><code>EditText et; et = (EditText)findViewbyld(R.id.txt);</code> — error is <strong>findViewbyld</strong> (lowercase b; correct: findViewById).</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REVIEWER: PREFINAL -->
+<div id="screen-reviewer-prefinal" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" data-go="reviewer-menu">← Back</button>
+    <span class="topbar-title">Prefinal Reviewer</span>
+    <button class="btn-nav" data-go="dashboard">🏠</button>
+  </div>
+  <div class="reviewer-content">
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Input Controls</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Button</div><div class="rev-term-def">Usually a rectangle or rounded rectangle with a descriptive caption or icon in its center. Can have text, icon, or both. Has three states: normal, disabled, and pressed.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Raised Button</div><div class="rev-term-def">Appears lifted from the screen — the shading around it indicates that it is possible to tap or click it.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Flat Button (Borderless Button)</div><div class="rev-term-def">A text-only button that looks flat and doesn't have a shadow.</div></div>
+        <div class="rev-term"><div class="rev-term-name">FAB (Floating Action Button)</div><div class="rev-term-def">A circular button that appears to float above the layout. F stands for Floating.</div></div>
+        <div class="rev-term"><div class="rev-term-name">ImageView</div><div class="rev-term-def">Used to display image resources. Can be turned into a button by adding the android:onClick attribute in XML. Image files must be stored in res/drawable folder.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Input Controls</div><div class="rev-term-def">Interactive elements in the app's UI that accept data input.</div></div>
+        <div class="rev-term"><div class="rev-term-name">EditText (Text Field)</div><div class="rev-term-def">Used for entering and modifying text.</div></div>
+        <div class="rev-term"><div class="rev-term-name">CheckBox</div><div class="rev-term-def">Used for selecting one or more options (multiple selection).</div></div>
+        <div class="rev-term"><div class="rev-term-name">Radio Button</div><div class="rev-term-def">Restricts the user to select only one (1) option from a set. Must be enclosed in a RadioGroup to ensure only one can be selected at a time.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Toggle Button</div><div class="rev-term-def">Lets the user change a setting between two (2) states. Multiple toggle buttons can exist in a layout.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Switch</div><div class="rev-term-def">A type of toggle button (for Android 4.0+) that provides a slider for selection.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Spinner</div><div class="rev-term-def">A drop-down menu for selecting only one (1) option. Has the android:entries attribute.</div></div>
+        <div class="rev-term"><div class="rev-term-name">SeekBar</div><div class="rev-term-def">Dragged to the left or right to indicate a current progress level. Has the android:progress attribute.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Touch Gesture</div><div class="rev-term-def">Occurs when a user places one or more fingers on the touchscreen, and the app interprets that pattern as a particular gesture (tap, touch &amp; hold, double-tap, fling, or scroll).</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Image Formats &amp; Drawables</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Drawable</div><div class="rev-term-def">A graphic that can be drawn to the screen. The Drawable class is used for adding rich images in an app with minimal impact on performance.</div></div>
+        <ul class="rev-list">
+          <li><strong>WebP</strong> – A modern image format by Google for superior lossless and lossy compression. (Recommended)</li>
+          <li><strong>PNG (Portable Network Graphics)</strong> – P stands for Portable. (Recommended)</li>
+          <li><strong>JPG/JPEG (Joint Photographic Experts Group)</strong> – E stands for Experts. (Recommended)</li>
+          <li><strong>GIF (Graphics Interchange Format)</strong> – I stands for Interchange. (Supported but NOT recommended)</li>
+          <li><strong>BMP (Bitmap)</strong> – NOT recommended for use in Android Studio.</li>
+        </ul>
+        <div class="rev-note">Image files should be saved in the app/src/main/res/drawable folder of the project.</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Input Events</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Event</div><div class="rev-term-def">Occurs when the user interacts with an input control or item in the user interface. Events can be generated using input controls.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Event Listener</div><div class="rev-term-def">An interface in the View class that contains a single callback method. Called when the View to which the listener has been registered is triggered by user interaction.</div></div>
+        <table class="rev-table">
+          <tr><th>Method</th><th>Interface</th><th>Trigger</th></tr>
+          <tr><td>onClick()</td><td>OnClickListener</td><td>User touches or focuses upon the item</td></tr>
+          <tr><td>onLongClick()</td><td>OnLongClickListener</td><td>User touches or focuses upon the item for a second</td></tr>
+          <tr><td>onKey()</td><td>OnKeyListener</td><td>User presses or releases a hardware key</td></tr>
+          <tr><td>onTouch()</td><td>OnTouchListener</td><td>User performs a touch event (press, release, or movement)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Styles and Themes</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Style</div><div class="rev-term-def">A collection of attributes that define the look and format of a view.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Platform Styles</div><div class="rev-term-def">The styles that Android provides by default.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Theme</div><div class="rev-term-def">A collection of attributes that define the look and format of an activity or an entire app. Any style can be used as a theme.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Inheritance (Style)</div><div class="rev-term-def">Allows a style to inherit the properties of an existing style. To inherit a platform style: use the parent attribute. To inherit a custom style: use the parent style name as the prefix separated by a period.</div></div>
+        <ul class="rev-list">
+          <li>A &lt;style&gt; element is created inside a &lt;resources&gt; element in any XML file in the values folder.</li>
+          <li>A &lt;style&gt; element includes: <strong>name</strong>, <strong>parent</strong> (optional), and any number of <strong>&lt;item&gt;</strong> child elements. Icon is NOT included.</li>
+          <li>To apply a platform style: <code>@android:style/StyleName</code></li>
+          <li>To apply a custom style: <code>@style/StyleName</code></li>
+          <li>The textColor attribute can accept hex values like <strong>#D7D6D7</strong>.</li>
+          <li>You can add <strong>as many &lt;item&gt; elements as needed</strong> to a &lt;style&gt; element.</li>
+          <li>To apply a theme to an activity: declare it inside an &lt;activity&gt; element in the manifest file.</li>
+          <li>To apply a theme to an app: declare it inside an &lt;application&gt; element in the manifest file.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REVIEWER: FINALS -->
+<div id="screen-reviewer-finals" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" data-go="reviewer-menu">← Back</button>
+    <span class="topbar-title">Finals Reviewer</span>
+    <button class="btn-nav" data-go="dashboard">🏠</button>
+  </div>
+  <div class="reviewer-content">
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Data Storage Options</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">Permanent Storage (Internal)</div><div class="rev-term-def">The getFilesDir() method returns the absolute path to the directory on the filesystem where the app's internal files are stored.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Shared Preferences</div><div class="rev-term-def">Allows you to save and retrieve primitive data types in key-value pairs. Used for storing small amounts of simple data.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Internal Storage</div><div class="rev-term-def">Store private data on the device memory. Files saved here are private by default and other apps cannot access them.</div></div>
+        <div class="rev-term"><div class="rev-term-name">External Storage</div><div class="rev-term-def">Store public data on the shared external storage. Requires permissions (READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE).</div></div>
+        <div class="rev-term"><div class="rev-term-name">SQLite Database</div><div class="rev-term-def">Store structured data in a private database. SQLite is a lightweight relational database included in Android.</div></div>
+        <div class="rev-term"><div class="rev-term-name">Network Connection</div><div class="rev-term-def">Store data on the web with your own network server or use cloud services (e.g., Firebase).</div></div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>File Storage Details</h3></div>
+      <div class="rev-section-body">
+        <ul class="rev-list">
+          <li>A file can be created in either of two directories: <strong>Permanent storage</strong> (internal) or <strong>External storage</strong>.</li>
+          <li><strong>getFilesDir()</strong> – Returns absolute path to internal files directory.</li>
+          <li><strong>getCacheDir()</strong> – Returns path to temporary/cache files directory.</li>
+          <li><strong>getExternalFilesDir()</strong> – Returns path to external files directory.</li>
+          <li>Use <strong>FileOutputStream</strong> to write data to a file.</li>
+          <li>Use <strong>FileInputStream</strong> to read data from a file.</li>
+          <li>Use <strong>openFileOutput()</strong> to open or create a file in internal storage.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>Shared Preferences</h3></div>
+      <div class="rev-section-body">
+        <ul class="rev-list">
+          <li>Use <strong>getSharedPreferences()</strong> to access a named preferences file.</li>
+          <li>Use <strong>getPreferences()</strong> to access a single preferences file for the Activity.</li>
+          <li>Use <strong>SharedPreferences.Editor</strong> to write to Shared Preferences.</li>
+          <li>Call <strong>apply()</strong> or <strong>commit()</strong> to save the changes.</li>
+          <li>Supports data types: int, float, long, boolean, String, Set&lt;String&gt;.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <div class="rev-section-header"><h3>SQLite Database</h3></div>
+      <div class="rev-section-body">
+        <div class="rev-term"><div class="rev-term-name">SQLiteOpenHelper</div><div class="rev-term-def">A helper class used to manage database creation and version management.</div></div>
+        <div class="rev-term"><div class="rev-term-name">SQLiteDatabase</div><div class="rev-term-def">The class used to manage and query a SQLite database.</div></div>
+        <ul class="rev-list">
+          <li><strong>onCreate()</strong> – Called when the database is created for the first time.</li>
+          <li><strong>onUpgrade()</strong> – Called when the database needs to be upgraded.</li>
+          <li><strong>getWritableDatabase()</strong> – Opens or creates a database for reading and writing.</li>
+          <li><strong>getReadableDatabase()</strong> – Opens or creates a database for reading.</li>
+          <li><strong>insert()</strong> – Inserts a row into a table.</li>
+          <li><strong>query()</strong> – Queries a database and returns a Cursor.</li>
+          <li><strong>update()</strong> – Updates rows in a table.</li>
+          <li><strong>delete()</strong> – Deletes rows from a table.</li>
+          <li><strong>Cursor</strong> – An interface that provides access to query result rows.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TEST MENU -->
+<div id="screen-test-menu" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" data-go="dashboard">🏠 Home</button>
+    <span class="topbar-title">Test Suite</span>
+  </div>
+  <h2 class="menu-title">📋 Test Suite</h2>
+  <p class="menu-sub">Select an exam to begin</p>
+  <div class="menu-grid">
+    <div class="menu-item" data-go="exam-prelim">
+      <span class="menu-item-icon">📝</span>
+      <div>
+        <div class="menu-item-label">Prelim Exam</div>
+        <div class="menu-item-desc">35 items · Generated from Prelim content</div>
+      </div>
+    </div>
+    <div class="menu-item" data-go="exam-midterm">
+      <span class="menu-item-icon">📝</span>
+      <div>
+        <div class="menu-item-label">Midterm Exam</div>
+        <div class="menu-item-desc">30 items · Reconstructed from exam paper</div>
+      </div>
+    </div>
+    <div class="menu-item" data-go="exam-prefinal">
+      <span class="menu-item-icon">📝</span>
+      <div>
+        <div class="menu-item-label">Prefinal Exam</div>
+        <div class="menu-item-desc">30 items · Reconstructed from exam paper</div>
+      </div>
+    </div>
+    <div class="menu-item" data-go="exam-finals">
+      <span class="menu-item-icon">📝</span>
+      <div>
+        <div class="menu-item-label">Final Exam</div>
+        <div class="menu-item-desc">35 items · 21 cumulative + 14 finals</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN (shared for all exams) -->
+<div id="screen-quiz" class="screen">
+  <div class="topbar">
+    <button class="btn-nav" id="quiz-home-btn" data-go="test-menu">← Exams</button>
+    <span class="topbar-title" id="quiz-screen-title">Exam</span>
+    <div class="scoreboard" id="live-score">Score: 0 / 0</div>
+  </div>
+  <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress"></div></div>
+  <div id="question-area"></div>
+  <div class="quiz-nav-row" id="quiz-nav-row">
+    <button class="btn-secondary" id="btn-prev">← Previous</button>
+    <span id="question-counter" style="color:var(--muted);font-size:13px"></span>
+    <button class="btn-primary" id="btn-next">Next →</button>
+  </div>
+  <div id="completion-area" style="display:none"></div>
+  <div id="answer-key-area"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ── UTILITY ────────────────────────────────────────────────────────────────
+function esc(s){
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+const screens={};
+document.querySelectorAll('.screen').forEach(el=>{
+  const id=el.id.replace('screen-','');
+  screens[id]=el;
+});
+function show(id){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  if(screens[id]){screens[id].classList.add('active');window.scrollTo(0,0);}
+}
+document.addEventListener('click',function(e){
+  const t=e.target.closest('[data-go]');
+  if(!t)return;
+  const dest=t.getAttribute('data-go');
+  if(dest==='dashboard'){show('dashboard');return;}
+  if(dest==='reviewer-menu'){show('reviewer-menu');return;}
+  if(dest==='test-menu'){show('test-menu');return;}
+  if(dest==='reviewer-prelim'){show('reviewer-prelim');return;}
+  if(dest==='reviewer-midterm'){show('reviewer-midterm');return;}
+  if(dest==='reviewer-prefinal'){show('reviewer-prefinal');return;}
+  if(dest==='reviewer-finals'){show('reviewer-finals');return;}
+  if(dest==='exam-prelim'){startExam('prelim');return;}
+  if(dest==='exam-midterm'){startExam('midterm');return;}
+  if(dest==='exam-prefinal'){startExam('prefinal');return;}
+  if(dest==='exam-finals'){startExam('finals');return;}
+});
+
+// ── QUESTION BANKS ─────────────────────────────────────────────────────────
+
+// MIDTERM EXAM (reconstructed from exam paper – 30 items)
+const MIDTERM_QUESTIONS=[
+  // Section A (15 items x 2 pts)
+  {q:"Which method is called when the activity is no longer visible to the user?",choices:["onPause()","onResume()","onStart()","onStop()"],answer:"onStop()",src:"midterm"},
+  {q:"Which of the following app components is displayed outside the user interface of an application?",choices:["App Bar","Dialog","Notification","Toast"],answer:"Notification",src:"midterm"},
+  {q:"Which of the following methods takes place after onRestart()?",choices:["onPause()","onResume()","onStart()","onStop()"],answer:"onStart()",src:"midterm"},
+  {q:"This part of Intent may instruct the Android system how to treat an activity after it is launched.",choices:["Intent Extra","Intent Flag","Intent Object","Target Activity"],answer:"Intent Flag",src:"midterm"},
+  {q:"This may prompt the user to enter additional information.",choices:["App Bar","Dialog","Notification","Toast"],answer:"Dialog",src:"midterm"},
+  {q:"This provides interactive elements that are familiar to the users.",choices:["App Bar","Dialog","Notification","Toast"],answer:"App Bar",src:"midterm"},
+  {q:"This provides a simple feedback about an operation.",choices:["App Bar","Dialog","Notification","Toast"],answer:"Toast",src:"midterm"},
+  {q:"This app component comes with tabs or drop-down lists.",choices:["App Bar","Dialog","Notification","Toast"],answer:"App Bar",src:"midterm"},
+  {q:"Which app component is also known as the action bar?",choices:["App Bar","Dialog","Notification","Toast"],answer:"App Bar",src:"midterm"},
+  {q:"This method is called before the activity becomes visible to the user.",choices:["onPause()","onResume()","onStart()","onStop()"],answer:"onStart()",src:"midterm"},
+  {q:"It contains a reference to the data you want the receiving activity to operate on.",choices:["Intent Extra","Intent Flag","Intent Object","Target Activity"],answer:"Intent Object",src:"midterm"},
+  {q:"It prompts the user to select from a given set of options.",choices:["App Bar","Dialog","Notification","Toast"],answer:"Dialog",src:"midterm"},
+  {q:"Which app component automatically disappears after a few seconds?",choices:["App Bar","Dialog","Notification","Toast"],answer:"Toast",src:"midterm"},
+  {q:"Which of the following methods comes before onRestart()?",choices:["onPause()","onResume()","onStart()","onStop()"],answer:"onStop()",src:"midterm"},
+  {q:"This method is invoked before the activity starts interacting with the user.",choices:["onPause()","onResume()","onStart()","onStop()"],answer:"onResume()",src:"midterm"},
+  // Section B (15 items x 3 pts)
+  {q:"What are the required attributes of all user interface elements?",choices:["Gravity and Weight","ID and Text","Input Type and Hint","Width and Height"],answer:"ID and Text",src:"midterm"},
+  {q:"Complete the Java statement: setContentView(R.___.activity_main);",choices:["id","layout","onCreate","void"],answer:"layout",src:"midterm"},
+  {q:"Which causes an error in the following XML code? android:text=\"Midterm Exam\";",choices:["android","text","Midterm Exam",";"],answer:";",src:"midterm"},
+  {q:"What is missing in the following method declaration? protected ___ onCreate(Bundle savedValues){}",choices:["extends","implements","new","void"],answer:"void",src:"midterm"},
+  {q:"How many arguments does the getText() method require?",choices:["0","1","2","3"],answer:"1",src:"midterm"},
+  {q:"Complete the XML code for the manifest file. <activity android:___=\"EndActivity\"> </activity>",choices:["action","category","id","name"],answer:"name",src:"midterm"},
+  {q:"Which causes an error in the following XML code? android:id=\"+@id/button1\"",choices:["android:id","+@id","/","button1"],answer:"+@id",src:"midterm"},
+  {q:"What is missing in the following class declaration? public class ProbActivity ___ Activity{}",choices:["extends","implements","static","void"],answer:"extends",src:"midterm"},
+  {q:"How many arguments does the findViewByld() method require?",choices:["0","1","2","3"],answer:"1",src:"midterm"},
+  {q:"Which causes an error in the following statement? String newText = et.setText().toString();",choices:["et","newText","setText()","toString()"],answer:"setText()",src:"midterm"},
+  {q:"How many arguments does the setText() method require?",choices:["0","1","2","3"],answer:"1",src:"midterm"},
+  {q:"Which best describes a linear layout?",choices:["It creates large and complex layouts.","It organizes its child view elements horizontally or vertically.","It arranges its child objects into rows or columns.","It arranges its child objects in a scrollable rectangular grid."],answer:"It organizes its child view elements horizontally or vertically.",src:"midterm"},
+  {q:"Which causes an error in the code below? EditText et; et = (EditText)findViewbyld(R.id.txt);",choices:["EditText","et","findViewbyld","R.id.txt"],answer:"findViewbyld",src:"midterm"},
+  {q:"Which app component usually appears at the bottom of the screen?",choices:["App Bar","Dialog","Notification","Toast"],answer:"Toast",src:"midterm"},
+  {q:"Clicking this component will display various details about the involved application/service.",choices:["App Bar","Dialog","Notification","Toast"],answer:"Notification",src:"midterm"},
+];
+
+// PREFINAL EXAM (reconstructed from exam paper – 30 items)
+const PREFINAL_QUESTIONS=[
+  {q:"What does I in GIF stand for?",choices:["Image","Interaction","Interchange","Interface"],answer:"Interchange",src:"prefinal"},
+  {q:"It is a text-only button.",choices:["FAB","Flat Button","Raised Button","Toggle Button"],answer:"Flat Button",src:"prefinal"},
+  {q:"Which of the following input controls is used for multiple selection?",choices:["Checkbox","Spinner","Switch","Toggle Button"],answer:"Checkbox",src:"prefinal"},
+  {q:"It is usually a rectangle or rounded rectangle with a descriptive caption or icon in its center.",choices:["Button","Spinner","Text Field","Toggle Button"],answer:"Button",src:"prefinal"},
+  {q:"Which of the following input controls is a drop-down list?",choices:["Checkbox","Spinner","Switch","Toggle Button"],answer:"Spinner",src:"prefinal"},
+  {q:"This button appears lifted from the screen.",choices:["ImageView","Flat Button","Raised Button","Toggle Button"],answer:"Raised Button",src:"prefinal"},
+  {q:"In which directory should you place image files?",choices:["res/drawable","res/layout","src/main","src/test"],answer:"res/drawable",src:"prefinal"},
+  {q:"Switch is a type of which of the following?",choices:["Checkbox","Picker","Spinner","Toggle Button"],answer:"Toggle Button",src:"prefinal"},
+  {q:"What does F in FAB stand for?",choices:["Fit","Flat","Floating","Frame"],answer:"Floating",src:"prefinal"},
+  {q:"This widget lets the user change a setting between two (2) states.",choices:["Checkbox","Radio Button","Text Field","Toggle Button"],answer:"Toggle Button",src:"prefinal"},
+  {q:"What does P in PNG stand for?",choices:["Photo","Photographic","Picture","Portable"],answer:"Portable",src:"prefinal"},
+  {q:"This widget is dragged to the left or right to indicate a current progress level.",choices:["Checkbox","SeekBar","Spinner","Toggle Button"],answer:"SeekBar",src:"prefinal"},
+  {q:"What does E in JPEG stand for?",choices:["EditText","Event","Extra","Experts"],answer:"Experts",src:"prefinal"},
+  {q:"This widget restricts the user to select only one (1) option from a set.",choices:["Checkbox","Radio Button","Text Field","Toggle Button"],answer:"Radio Button",src:"prefinal"},
+  {q:"It is a collection of attributes that define the look and format of a view.",choices:["Drawable","Library","Project","Style"],answer:"Style",src:"prefinal"},
+  {q:"Which among the following image formats is NOT recommended for use in Android Studio?",choices:["BMP","JPG","PNG","WebP"],answer:"BMP",src:"prefinal"},
+  {q:"Which DOES NOT appear on a button?",choices:["Image","Text","Text Field","Text with Image"],answer:"Text Field",src:"prefinal"},
+  {q:"Which is TRUE in the following statements?",choices:["Events can be generated using input controls.","All mobile devices support all the Android versions.","A checkbox item can be selected even before user interaction.","Dialogs are designed to fit the entire screen of a device."],answer:"Events can be generated using input controls.",src:"prefinal"},
+  {q:"How many <item> elements can you add to a <style> element?",choices:["None","1","2","As many as needed"],answer:"As many as needed",src:"prefinal"},
+  {q:"In XML, how will you apply a platform style named DefaultStyle?",choices:["/DefaultStyle@style","/style@DefaultStyle","@DefaultStyle/style","@style/DefaultStyle"],answer:"@style/DefaultStyle",src:"prefinal"},
+  {q:"Which attribute can accept the value, #D7D6D7?",choices:["parent","textColor","textSize","typeface"],answer:"textColor",src:"prefinal"},
+  {q:"How can you ensure that only a single radio button can be selected at a time?",choices:["Assign a unique ID to each RadioButton element.","Create a spinner to handle the items.","Enclose RadioButton elements within a RadioGroup.","Write separate XML files for each radio button."],answer:"Enclose RadioButton elements within a RadioGroup.",src:"prefinal"},
+  {q:"In creating an online survey, which widget should you use to allow the user to select his/her favorite websites?",choices:["Checkbox","Radio Button","Spinner","Toggle Button"],answer:"Checkbox",src:"prefinal"},
+  {q:"Which of the following is NOT included in a <style> element?",choices:["Icon","item","name","parent"],answer:"Icon",src:"prefinal"},
+  {q:"In creating an online survey, which widget should you use to allow the user to select his/her year level in school?",choices:["Checkbox","Radio Button","Switch","Toggle Button"],answer:"Radio Button",src:"prefinal"},
+  {q:"Which of the following widgets has the android:progress attribute?",choices:["SeekBar","Spinner","Switch","Toggle Button"],answer:"SeekBar",src:"prefinal"},
+  {q:"Which of the following is NOT a button state?",choices:["Cleared","Disabled","Normal","Pressed"],answer:"Cleared",src:"prefinal"},
+  {q:"Which is TRUE in the following statements?",choices:["Multiple toggle buttons can exist in a layout.","UI elements can have the same ID.","Dialogs disappear after a certain period of time.","A View object can be handled by another View object."],answer:"Multiple toggle buttons can exist in a layout.",src:"prefinal"},
+  {q:"Which of the following widgets has the android:entries attribute?",choices:["SeekBar","Spinner","Switch","Toggle Button"],answer:"Spinner",src:"prefinal"},
+  {q:"In creating an online survey, which widget should you use to allow the user to select his/her gender?",choices:["Checkbox","Radio Button","Switch","Toggle Button"],answer:"Radio Button",src:"prefinal"},
+];
+
+// PRELIM pool – generated from reviewer content
+const PRELIM_TERMS=[
+  {term:"Convenience",def:"A mobile app benefit where users can access and share information anytime or anywhere, without requiring internet on most apps."},
+  {term:"Personalization",def:"A mobile app benefit where users can change settings based on their preferences and receive real-time notifications."},
+  {term:"Productivity",def:"A mobile app benefit allowing users to write, read, present reports, and manage multimedia files using only their phones."},
+  {term:"IDE",def:"An Integrated Development Environment — a programming environment packaged as an application, typically containing a code editor, compiler, debugger, and GUI builder."},
+  {term:"Android Studio",def:"The official IDE for Android application development, based on IntelliJ IDEA (a Java IDE)."},
+  {term:"Xcode",def:"An IDE that allows users to build apps and run them on Apple devices, using Swift as its programming language."},
+  {term:"Xamarin",def:"An IDE that extends the .NET developer platform with tools and libraries for building cross-platform apps."},
+  {term:"Corona",def:"A free, cross-platform framework ideal for creating mobile apps and games, using the Lua scripting language."},
+  {term:"Apache Cordova",def:"An open-source mobile development framework allowing use of standard web technologies (HTML5, CSS3, JavaScript) for cross-platform development."},
+  {term:"Swift",def:"The official programming language for iOS, created by Apple for iOS, OS X, and watchOS development."},
+  {term:"Kotlin",def:"A programming language that combines object-oriented and functional features, using val (never changes) and var (can change) keywords."},
+  {term:"Activity",def:"An app component that is the entry point for interacting with the user, representing a single screen with a user interface."},
+  {term:"Service",def:"An app component that runs in the background to perform long-running operations or work for remote processes."},
+  {term:"Broadcast Receiver",def:"An app component that enables the system to deliver events to the app outside of a regular user flow, responding to system-wide broadcast announcements."},
+  {term:"Content Provider",def:"An app component that manages a shared set of app data that you can store which your app can access."},
+  {term:"Intent",def:"A message defined by an Intent object that describes an action to perform, including data, category of component, and instructions."},
+  {term:"Manifest File",def:"The AndroidManifest.xml file that details all the components that exist in an app, with <manifest> as the root element."},
+  {term:"Explicit Intent",def:"A type of intent where the target activity (the class name) is already identified."},
+  {term:"Implicit Intent",def:"A type of intent where the target is not yet identified but there is a general action to perform, including an action, category, and data type."},
+  {term:"Back Stack",def:"A stack maintained by the system where each time a new activity starts, the previous activity is stopped but preserved."},
+  {term:"Lua",def:"The scripting language used by the Corona framework for mobile app and game development."},
+];
+
+// FINALS content pool
+const FINALS_TERMS=[
+  {term:"Shared Preferences",def:"An Android storage option that allows saving and retrieving primitive data types in key-value pairs, used for storing small amounts of simple data."},
+  {term:"Internal Storage",def:"A storage option for storing private data on the device memory; files are private by default and inaccessible to other apps."},
+  {term:"External Storage",def:"A storage option for storing public data on the shared external storage, requiring READ_EXTERNAL_STORAGE or WRITE_EXTERNAL_STORAGE permissions."},
+  {term:"SQLite Database",def:"A storage option for structured data in a private, lightweight relational database included in Android."},
+  {term:"SQLiteOpenHelper",def:"A helper class used to manage database creation and version management in Android."},
+  {term:"SQLiteDatabase",def:"The class used to manage and query a SQLite database in Android."},
+  {term:"getFilesDir()",def:"A method that returns the absolute path to the directory on the filesystem where the app's internal files are stored."},
+  {term:"getCacheDir()",def:"A method that returns the path to the temporary or cache files directory in internal storage."},
+  {term:"getExternalFilesDir()",def:"A method that returns the path to the external files directory for the app."},
+  {term:"Cursor",def:"An interface that provides access to query result rows in a SQLite database."},
+  {term:"getSharedPreferences()",def:"A method used to access a named shared preferences file."},
+  {term:"getPreferences()",def:"A method used to access a single preferences file for the current Activity."},
+  {term:"FileOutputStream",def:"A class used to write data to a file in Android."},
+  {term:"FileInputStream",def:"A class used to read data from a file in Android."},
+  {term:"Network Connection (Cloud Storage)",def:"A data storage option where data is stored on the web using a network server or cloud services such as Firebase."},
+];
+
+// SITUATIONAL QUESTIONS (5) for finals
+const SITUATIONAL_QS=[
+  {
+    q:"Maria is building an app where users must log in once and stay logged in even after closing the app. She needs to save a boolean value indicating login status. Which storage method should she use?",
+    choices:["SQLite Database","Shared Preferences","External Storage","Network Connection"],
+    answer:"Shared Preferences",src:"finals"
+  },
+  {
+    q:"Carlos is developing a note-taking app where notes must be stored permanently on the device and searchable by keywords. The notes have a title, body, and date. Which data storage option is most appropriate?",
+    choices:["Shared Preferences","Internal Storage (flat file)","SQLite Database","getCacheDir()"],
+    answer:"SQLite Database",src:"finals"
+  },
+  {
+    q:"Anna's photo-sharing app needs to save large image files that users can also access using the device's gallery app. Which storage option should she use?",
+    choices:["Internal Storage","Shared Preferences","External Storage","SQLite Database"],
+    answer:"External Storage",src:"finals"
+  },
+  {
+    q:"Ben is writing a simple config file for his app that no other app should read. He uses openFileOutput() and FileOutputStream. Which storage type is he using?",
+    choices:["External Storage","Shared Preferences","Network Storage","Internal Storage"],
+    answer:"Internal Storage",src:"finals"
+  },
+  {
+    q:"Lea's travel app shows real-time exchange rates fetched from a server API. When the device is offline, it shows cached data. The live data is stored remotely. Which storage method handles the live data?",
+    choices:["SQLite Database","Shared Preferences","Internal Storage","Network Connection"],
+    answer:"Network Connection",src:"finals"
+  },
+];
+
+// ── EXAM GENERATION ─────────────────────────────────────────────────────────
+
+function genPrelimExam(){
+  const terms=[...PRELIM_TERMS];
+  const shuffledTerms=shuffle(terms);
+  const qs=[];
+  shuffledTerms.forEach((item,i)=>{
+    const wrongPool=PRELIM_TERMS.filter(x=>x.term!==item.term);
+    const wrongs=shuffle(wrongPool).slice(0,3);
+    if(i%2===0){
+      const choices=shuffle([item.def,...wrongs.map(w=>w.def)]);
+      qs.push({q:item.term,choices,answer:item.def,src:"prelim"});
+    } else {
+      const choices=shuffle([item.term,...wrongs.map(w=>w.term)]);
+      qs.push({q:item.def,choices,answer:item.term,src:"prelim"});
+    }
+  });
+  while(qs.length<35){
+    const item=rand(PRELIM_TERMS);
+    const wrongPool=PRELIM_TERMS.filter(x=>x.term!==item.term);
+    const wrongs=shuffle(wrongPool).slice(0,3);
+    const choices=shuffle([item.def,...wrongs.map(w=>w.def)]);
+    qs.push({q:item.term,choices,answer:item.def,src:"prelim"});
+  }
+  return shuffle(qs).slice(0,35);
+}
+
+function genFinalsExam(){
+  const midSample=shuffle(MIDTERM_QUESTIONS).slice(0,7);
+  const preSample=shuffle(PREFINAL_QUESTIONS).slice(0,7);
+  const prelimSample=genPrelimExam().slice(0,7);
+  const cumulative=shuffle([...midSample,...preSample,...prelimSample]);
+
+  const termsPool=[...FINALS_TERMS];
+  const shuffledFinals=shuffle(termsPool);
+  const finalsGenerated=[];
+  shuffledFinals.forEach((item,i)=>{
+    const wrongPool=FINALS_TERMS.filter(x=>x.term!==item.term);
+    const wrongs=shuffle(wrongPool).slice(0,3);
+    if(i%2===0){
+      const choices=shuffle([item.def,...wrongs.map(w=>w.def)]);
+      finalsGenerated.push({q:item.term,choices,answer:item.def,src:"finals"});
+    } else {
+      const choices=shuffle([item.term,...wrongs.map(w=>w.term)]);
+      finalsGenerated.push({q:item.def,choices,answer:item.term,src:"finals"});
+    }
+  });
+  const finalsMCQ=shuffle(finalsGenerated).slice(0,9);
+  const situational=[...SITUATIONAL_QS];
+
+  const first30=shuffle([...cumulative,...finalsMCQ]);
+  return [...first30,...shuffle(situational)];
+}
+
+// ── QUIZ ENGINE ────────────────────────────────────────────────────────────
+
+let currentExam=[];
+let currentIdx=0;
+let answered={};
+
+function startExam(type){
+  answered={};
+  currentIdx=0;
+  if(type==='prelim') currentExam=genPrelimExam();
+  else if(type==='midterm') currentExam=shuffle(MIDTERM_QUESTIONS);
+  else if(type==='prefinal') currentExam=shuffle(PREFINAL_QUESTIONS);
+  else currentExam=genFinalsExam();
+
+  const titleEl=document.getElementById('quiz-screen-title');
+  const labels={prelim:'Prelim Exam',midterm:'Midterm Exam',prefinal:'Prefinal Exam',finals:'Final Exam'};
+  if(titleEl) titleEl.textContent=labels[type]||'Exam';
+
+  const compArea=document.getElementById('completion-area');
+  if(compArea){compArea.style.display='none';compArea.innerHTML='';}
+  const akArea=document.getElementById('answer-key-area');
+  if(akArea) akArea.innerHTML='';
+  const navRow=document.getElementById('quiz-nav-row');
+  if(navRow) navRow.style.display='flex';
+
+  show('quiz');
+  renderQuestion(0);
+  updateScore();
+}
+
+function renderQuestion(idx){
+  currentIdx=idx;
+  const q=currentExam[idx];
+  if(!q) return;
+  const total=currentExam.length;
+  const qArea=document.getElementById('question-area');
+  if(!qArea) return;
+
+  const pct=((idx)/(total))*100;
+  const pFill=document.getElementById('quiz-progress');
+  if(pFill) pFill.style.width=pct+'%';
+  const counter=document.getElementById('question-counter');
+  if(counter) counter.textContent=(idx+1)+' / '+total;
+
+  const card=document.createElement('div');
+  card.className='question-card';
+
+  const meta=document.createElement('div');
+  meta.className='question-meta';
+  meta.textContent='Question '+(idx+1)+' of '+total+(q.src?' · '+q.src.charAt(0).toUpperCase()+q.src.slice(1):'');
+  card.appendChild(meta);
+
+  const qText=document.createElement('div');
+  qText.className='question-text';
+  qText.textContent=q.q;
+  card.appendChild(qText);
+
+  qArea.innerHTML='';
+  qArea.appendChild(card);
+
+  const choicesList=document.createElement('div');
+  choicesList.className='choices-list';
+  const letters=['A','B','C','D'];
+
+  const state=answered[idx];
+
+  q.choices.forEach((ch,ci)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    if(state){
+      btn.disabled=true;
+      if(ch===q.answer){btn.classList.add('correct');}
+      else if(state.selected===ch){btn.classList.add('wrong');}
+    }
+    const letter=document.createElement('span');
+    letter.className='choice-letter';
+    letter.textContent=letters[ci]||ci;
+    btn.appendChild(letter);
+    const txt=document.createElement('span');
+    txt.textContent=ch;
+    btn.appendChild(txt);
+
+    if(!state){
+      btn.addEventListener('click',()=>handleAnswer(idx,ch,q.answer));
+    }
+    choicesList.appendChild(btn);
+  });
+  qArea.appendChild(choicesList);
+
+  if(state){
+    const fb=document.createElement('div');
+    fb.className='feedback-msg '+(state.correct?'correct':'wrong');
+    fb.textContent=state.correct
+      ?'✓ Correct!'
+      :'✗ Wrong! The correct answer is: '+q.answer;
+    qArea.appendChild(fb);
+  }
+
+  const prev=document.getElementById('btn-prev');
+  const next=document.getElementById('btn-next');
+  if(prev){
+    prev.style.visibility=idx===0?'hidden':'visible';
+    prev.onclick=()=>renderQuestion(idx-1);
+  }
+  if(next){
+    if(idx===total-1){
+      next.textContent='Finish 🏁';
+      next.onclick=()=>showCompletion();
+    } else {
+      next.textContent='Next →';
+      next.onclick=()=>renderQuestion(idx+1);
+    }
+  }
+}
+
+function handleAnswer(idx,selected,correct){
+  if(answered[idx]) return;
+  answered[idx]={selected,correct:selected===correct};
+  updateScore();
+  renderQuestion(idx);
+}
+
+function updateScore(){
+  const total=currentExam.length;
+  const answeredCount=Object.keys(answered).length;
+  const correctCount=Object.values(answered).filter(a=>a.correct).length;
+  const el=document.getElementById('live-score');
+  if(el) el.textContent='Score: '+correctCount+' / '+answeredCount+' answered';
+}
+
+function showCompletion(){
+  const total=currentExam.length;
+  const correctCount=Object.values(answered).filter(a=>a.correct).length;
+  const answeredCount=Object.keys(answered).length;
+  const pct=total>0?Math.round((correctCount/total)*100):0;
+
+  const compArea=document.getElementById('completion-area');
+  const navRow=document.getElementById('quiz-nav-row');
+  const pFill=document.getElementById('quiz-progress');
+  if(pFill) pFill.style.width='100%';
+  if(navRow) navRow.style.display='none';
+  if(!compArea) return;
+
+  compArea.style.display='block';
+  compArea.innerHTML='';
+
+  const banner=document.createElement('div');
+  banner.className='completion-banner';
+  const h2=document.createElement('h2');
+  h2.textContent='🎉 Exam Complete!';
+  banner.appendChild(h2);
+  const scoreBig=document.createElement('div');
+  scoreBig.className='score-big';
+  scoreBig.textContent=correctCount+' / '+total;
+  banner.appendChild(scoreBig);
+  const scorePct=document.createElement('div');
+  scorePct.className='score-pct';
+  scorePct.textContent=pct+'% · '+answeredCount+' of '+total+' answered';
+  banner.appendChild(scorePct);
+
+  const retakeBtn=document.createElement('button');
+  retakeBtn.className='btn-primary';
+  retakeBtn.style.marginTop='20px';
+  retakeBtn.textContent='↻ Retake Exam';
+  retakeBtn.addEventListener('click',()=>{
+    const title=document.getElementById('quiz-screen-title');
+    const t=title?title.textContent:'';
+    let type='prelim';
+    if(t.includes('Midterm')) type='midterm';
+    else if(t.includes('Prefinal')) type='prefinal';
+    else if(t.includes('Final')) type='finals';
+    startExam(type);
+  });
+  banner.appendChild(retakeBtn);
+  compArea.appendChild(banner);
+
+  buildAnswerKey();
+}
+
+function buildAnswerKey(){
+  const akArea=document.getElementById('answer-key-area');
+  if(!akArea) return;
+  akArea.innerHTML='';
+
+  const section=document.createElement('div');
+  section.className='answer-key-section';
+  const header=document.createElement('div');
+  header.className='answer-key-header';
+  const h3=document.createElement('h3');
+  h3.textContent='📋 Answer Key';
+  header.appendChild(h3);
+  section.appendChild(header);
+
+  const grid=document.createElement('div');
+  grid.className='answer-key-grid';
+  currentExam.forEach((q,i)=>{
+    const item=document.createElement('div');
+    item.className='ak-item';
+    const num=document.createElement('div');
+    num.className='ak-num';
+    num.textContent=(i+1)+'.';
+    const ans=document.createElement('div');
+    ans.className='ak-ans';
+    ans.textContent=q.answer;
+    item.appendChild(num);
+    item.appendChild(ans);
+    grid.appendChild(item);
+  });
+  section.appendChild(grid);
+  akArea.appendChild(section);
+}
+
+const quizHomeBtn=document.getElementById('quiz-home-btn');
+if(quizHomeBtn){
+  quizHomeBtn.addEventListener('click',()=>show('test-menu'));
+}
+
+})();
+</script>
+</body>
+</html>
